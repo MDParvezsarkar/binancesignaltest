@@ -1,0 +1,10 @@
+{
+  "iv": "1h",
+  "budget": 1000,
+  "rk": 2,
+  "smc": { "on": true, "minWR": 60, "max": 5 },
+  "scan": { "on": true, "top": 20, "minScore": 4 },
+  "coins": [
+    { "s": "ZEC", "tp": 10, "sl": 10, "entries": [ { "p": 300, "u": 100 }, { "p": 250, "u": 200 } ] }
+  ]
+}

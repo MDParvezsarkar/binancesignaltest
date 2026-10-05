@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coin Signal Tracker</title>
+<style>
+:root{--bg:#0b0e11;--c:#181a20;--t:#eaecef;--m:#9aa4b2;--g:#0ecb81;--r:#f6465d;--y:#fcd535}
+*{box-sizing:border-box}body{margin:auto;background:var(--bg);color:var(--t);font:15px Arial,sans-serif;padding:14px;max-width:1150px}
+h1{font-size:21px;margin:0 0 4px}input,select,button{background:#2b3139;color:var(--t);border:1px solid #3a4150;border-radius:8px;padding:9px 11px;font:inherit}
+button{cursor:pointer;background:var(--y);color:#000;font-weight:bold;border:0}
+.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}.top input{flex:1;min-width:140px}
+.chips button{background:#2b3139;color:var(--t);font-weight:normal;padding:6px 10px;margin:0 4px 4px 0}
+#st{font-size:13px;padding:4px 10px;border-radius:20px;background:#2b3139}.ok{color:var(--g)}.bad{color:var(--r)}.wait{color:var(--y)}
+#warn{display:none;background:#3b1c22;border:1px solid var(--r);padding:10px;border-radius:8px;margin:10px 0;line-height:1.5}
+#sum{background:var(--c);border-radius:10px;padding:12px;margin:10px 0;font-size:14px}
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{background:var(--c);border-radius:12px;padding:14px;border:1px solid #2b3139}
+.h{display:flex;gap:8px;align-items:center}.h b{font-size:17px;flex:1}.h a{color:var(--y);font-size:13px;text-decoration:none}
+.x{background:none!important;color:var(--m)!important;padding:2px 8px!important}
+.p{font-size:28px;font-weight:bold}.chg{margin-left:8px;font-size:13px}.up{color:var(--g)}.dn{color:var(--r)}
+.act{border-radius:10px;padding:10px;margin:10px 0;text-align:center}.act b{font-size:22px;display:block}.act span{font-size:13px}
+.buy{background:var(--g);color:#000}.sell{background:var(--r);color:#fff}.hold{background:#2b3139;color:var(--m)}
+.blink{animation:bl 1s infinite}@keyframes bl{50%{opacity:.25}}
+details{margin-top:8px;font-size:13px;color:var(--m)}summary{cursor:pointer;color:var(--t);font-weight:bold;padding:4px 0}
+.why{margin:4px 0;padding-left:18px;line-height:1.5}.pos{line-height:1.7;color:var(--t)}
+.pill{display:inline-block;padding:5px 10px;border-radius:6px;font-weight:bold;margin-top:4px}
+.en span{display:inline-block;margin:3px 6px 3px 0;background:#2b3139;padding:3px 8px;border-radius:5px}.en i{cursor:pointer;color:var(--r);font-style:normal}
+.row{display:flex;gap:6px;margin-top:8px;align-items:center;font-size:13px;flex-wrap:wrap}.row input{flex:1;min-width:70px;width:70px}
+.foot{margin-top:16px;color:var(--m);font-size:12px;line-height:1.6}
+.todo{background:#12161c;border:1px solid #2b3139;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px;line-height:1.7}.todo .g{color:var(--g)}.todo .rd{color:var(--r)}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}td,th{padding:5px 3px;text-align:left;border-bottom:1px solid #2b3139}th{color:var(--m)}.sm{padding:2px 7px;font-size:11px}.dim td{color:var(--m)}
+.grid,.set{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.set label{font-size:12px;display:flex;flex-direction:column;gap:3px}.set input{width:100%}
+.meter{height:8px;background:rgba(0,0,0,.35);border-radius:4px;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%}.sumb{background:#12161c;border-radius:8px;padding:8px 10px;line-height:1.7}
+.gauge{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#f6465d,#555 50%,#0ecb81);margin-top:10px}.gauge u{position:absolute;top:-4px;width:4px;height:18px;background:#fff;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 6px #fff;transition:left .4s}
+.gl{display:flex;justify-content:space-between;font-size:10px;margin-top:4px;opacity:.9}
+.gb{border-color:var(--g)!important;box-shadow:0 0 14px rgba(14,203,129,.45)}.gs{border-color:var(--r)!important;box-shadow:0 0 14px rgba(246,70,93,.45)}
+#alerts{position:sticky;top:0;z-index:5;background:#0b0e11ee;padding:8px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #2b3139;margin-bottom:8px}
+.chip{display:inline-block;padding:5px 11px;border-radius:20px;font-weight:bold;font-size:13px;cursor:pointer}.chip.b{background:var(--g);color:#000}.chip.s{background:var(--r);color:#fff}
+.nyet{background:rgba(252,213,53,.15);color:var(--y);border:1px solid var(--y)}
+body{background:radial-gradient(circle at top,#161c27,#0b0e11 60%) fixed}h1{background:linear-gradient(90deg,#fcd535,#0ecb81);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:26px}
+.card{box-shadow:0 4px 18px rgba(0,0,0,.35)}.tabs{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}.tab{background:#2b3139;color:var(--t);font-weight:normal;border-radius:20px;padding:7px 18px}.tab.on{background:var(--y);color:#000;font-weight:bold}
+.mv{background:linear-gradient(160deg,#1c212b,#151922);border:1px solid #2b3139;border-radius:14px;padding:14px;position:relative}.mv .rk{position:absolute;top:12px;right:14px;color:var(--m);font-size:12px}
+.chance b{font-size:26px}.bar{height:8px;background:#2b3139;border-radius:4px;overflow:hidden;margin:5px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,#fcd535,#0ecb81)}
+.zone{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.zone div{background:#10141a;border-radius:8px;padding:8px;font-size:12px;color:var(--m)}.zone b{display:block;font-size:14px;color:var(--t);margin-top:2px}
+.mvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+</style></head><body>
+<h1>Coin Signal Tracker</h1><span id="st" class="wait">Connecting...</span> <span id="lu" class="foot"></span>
+<div id="alerts"><span class="sc">Loading signals...</span></div>
+<div id="bzh"></div>
+<div id="warn"><b>Cannot reach Binance.</b><br>1) Check your internet. 2) Binance may be blocked by your network - try a VPN or mobile data. 3) Open this from your GitHub Pages link in Chrome (not inside a preview window). It will reconnect by itself.</div>
+<div class="top"><button type="button" onclick="S.po.bz=!S.po.bz;save();showPanels()" style="background:#2dd4bf;color:#000">🏢 Business Planner</button><button type="button" onclick="S.po.st=!S.po.st;save();showPanels()" style="background:#5aa9ff;color:#000">📊 My Stats</button><button type="button" onclick="S.po.mv=!S.po.mv;save();showPanels()" style="background:#ff8a3d;color:#000">🚀 Movers 1h/12h/24h</button><button type="button" onclick="S.po.sm=!S.po.sm;save();showPanels()" style="background:#a56eff;color:#fff">🧠 Smart Money Signals</button><button type="button" onclick="togPlan()" style="background:var(--y)">📋 Top Coins Plan</button><button type="button" onclick="togScan()" style="background:var(--g)">🔍 Market Scanner</button><input id="ni" placeholder="Type coin name, e.g. ZEC" onkeydown="if(event.key=='Enter')addCoin()"><button type="button" onclick="addCoin()">+ Add coin</button>
+<select id="iv" onchange="S.iv=this.value;save();reloadAll();nextAt=0" title="Signal timeframe"><option value="15m">Signal: 15 min</option><option value="1h">Signal: 1 hour</option><option value="4h">Signal: 4 hour</option><option value="1d">Signal: 1 day</option></select>
+<label class="foot"><input type="checkbox" id="snd" checked style="width:auto"> Sound</label></div>
+<div class="foot" style="margin:0 0 8px">Auto-update Scanner and Plan: <select id="ar" onchange="S.ar=+this.value;save();nextAt=Date.now()+S.ar*60000"><option value="1">every 1 min</option><option value="2">every 2 min</option><option value="5">every 5 min</option><option value="10">every 10 min</option></select> | Next update in <b id="cd">--</b> | <span id="fg"></span> | <button class="sm" onclick="nextAt=0">Update now</button> <button class="sm" onclick="enNotif()">🔔 Notifications <span id="nt"></span></button> <button class="sm" onclick="cpAlert()">📤 Copy settings for Telegram alerts</button></div>
+<div class="foot" style="margin:0 0 8px;line-height:1.8"><b>How to read:</b> <span class="up">▲ BUY NOW</span> = buy a small amount now | <span style="color:var(--y)">⏳ NOT YET</span> = do not buy yet, buy only at the dip price shown | ✋ HOLD = keep your coins, sell at the target price | <span class="dn">▼ SELL NOW</span> = sell your coins | <span class="dn">▼ DON'T BUY</span> = price weak, stay out | ⏸ NO BUY NOW = signal not clear, wait</div>
+<div class="chips" id="chips"></div>
+<div id="msg" class="wait" style="min-height:18px;font-size:13px;margin:4px 0"></div>
+<div id="scan" class="card" style="display:none;margin:10px 0"><b>Market Scanner</b> <span class="sc">(auto-updates)</span> <span id="scmsg" class="sc"></span> <button class="sm" onclick="runScan()">Rescan</button><div id="scout"><div class="sc" style="padding:8px">Loading first update...</div></div></div>
+<div id="biz" class="card" style="display:none;margin:10px 0"><b>🏢 Business Planner - 12-month plan, capital, risk and account</b><div class="set" id="bzset" style="margin:10px 0;grid-template-columns:repeat(auto-fit,minmax(135px,1fr))"></div><div id="bzout"></div></div>
+<div id="sta" class="card" style="display:none;margin:10px 0"><b>📊 My Stats, Risk and Backup</b><div id="stout"></div></div>
+<div id="mov" class="card" style="display:none;margin:10px 0"><b>🚀 Coins likely to rise 5-10% - next 1h / 12h / 24h</b> <span class="sc">(auto-updates)</span> <span id="mvmsg" class="sc"></span><div id="mvout"><div class="sc" style="padding:8px">Loading first update...</div></div></div>
+<div id="smc" class="card" style="display:none;margin:10px 0"><b>🧠 Smart Money Signals - spot BUY only</b> <span class="sc">(auto-updates)</span> <span id="smmsg" class="sc"></span> <button class="sm" onclick="runSmc()">Update now</button>
+<div class="set" id="smset" style="margin:10px 0;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))"></div><div id="smout"><div class="sc" style="padding:8px">Loading first update...</div></div></div>
+<div id="plan" class="card" style="display:none;margin:10px 0"><b>Top Coins Plan - when to buy, when to sell, how much</b> <span class="sc">(auto-updates)</span> <span id="plmsg" class="sc"></span> <button class="sm" onclick="runPlan()">Rescan</button>
+<div class="set" id="plset" style="margin:10px 0;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))"></div><div id="plout"><div class="sc" style="padding:8px">Loading first update...</div></div></div>
+<div id="sum"></div>
+<div id="list"></div>
+<div class="foot">How signals work: RSI + EMA trend + MACD + Bollinger bands are scored from Binance candle data in your browser. BUY = score +3 or more, SELL = -3 or less. "Past accuracy" shows how often earlier signals on that coin were right (price moved more than 0.2% the right way within 12 candles). Nobody can guarantee profit - this is not financial advice. Your coins and buys are saved only in this browser.</div>
+<script src="smc.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+let S=JSON.parse(localStorage.getItem('ct1')||'null')||{iv:'1h',coins:[{s:'ZEC',tp:10,sl:10,e:[{p:300,u:100},{p:250,u:200}]}]};
+S.coins.forEach(c=>{c.b=c.b||500;c.st=c.st||20;c.ld=c.ld||5;c.tp=c.tp||10;c.sl=c.sl||10});
+S.pl=S.pl||{bg:1000,rk:2,T:10,St:8,N:20};S.po=S.po||{sc:0,pl:0};if(S.po.sm===undefined)S.po.sm=1;if(S.po.mv===undefined)S.po.mv=1;S.mv=S.mv||{h:12};if(!S.bz){S.bz={cap:10000,r:1,wr:50,aw:5,al:4,tr:12,ml:6,dd:15,fee:.1,flows:[],start:Date.now(),cw:90,ca:2};S.pl.bg=10000;S.pl.rk=1}S.sm=S.sm||{wr:60,max:5,list:[]};S.ar=S.ar||5;
+const D={},save=()=>localStorage.setItem('ct1',JSON.stringify(S)),ob=s=>D[s]=D[s]||{};
+const f=p=>p==null?'...':p.toLocaleString('en',{maximumFractionDigits:p>=100?2:p>=1?4:6});
+/* ---- data layer with fallbacks ---- */
+const H=['https://api.binance.com','https://data-api.binance.vision','https://api1.binance.com','https://api2.binance.com'];let hi=0;
+async function api(path){for(let n=0;n<H.length;n++){const k=(hi+n)%H.length;try{const r=await fetch(H[k]+path);if(r.ok){hi=k;return await r.json()}}catch(e){}}throw 0}
+const WH=['wss://stream.binance.com:9443','wss://data-stream.binance.vision'];let wi=0,ws,last=0,lastWs=0,via='',t0=Date.now();
+function connect(){if(ws){ws.onclose=null;ws.close()}if(!S.coins.length)return;
+try{ws=new WebSocket(WH[wi%2]+'/stream?streams='+S.coins.map(c=>c.s.toLowerCase()+'usdt@miniTicker').join('/'))}catch(e){return}
+ws.onmessage=m=>{const d=JSON.parse(m.data).data,o=ob(d.s.replace(/USDT$/,''));o.p=+d.c;o.chg=(d.c-d.o)/d.o*100;last=lastWs=Date.now();via='ws';upd()};
+ws.onclose=()=>{wi++;setTimeout(connect,3000)}}
+async function poll(){if(!S.coins.length||Date.now()-lastWs<6000)return;
+try{const a=await api('/api/v3/ticker/24hr?symbols='+encodeURIComponent(JSON.stringify(S.coins.map(c=>c.s+'USDT'))));
+a.forEach(x=>{const o=ob(x.symbol.replace(/USDT$/,''));o.p=+x.lastPrice;o.chg=+x.priceChangePercent});last=Date.now();via='poll';upd()}catch(e){}}
+function stat(){const a=(Date.now()-last)/1000,el=$('#st');let t='Connecting...',c='wait',w=0;
+if(!last){if(Date.now()-t0>10000){t='Not connected';c='bad';w=1}}
+else if(a<8){t=via=='ws'?'● LIVE (real-time)':'● LIVE (updates every 4 sec)';c='ok'}else{t='Connection lost - retrying';c='bad';w=1}
+el.textContent=t;el.className=c;$('#warn').style.display=w?'block':'none';$('#lu').textContent=last?'Last update '+new Date(last).toLocaleTimeString():''}
+/* ---- indicators ---- */
+function ema(a,n){const k=2/(n+1),o=[];let p=a[0];a.forEach((v,i)=>{p=i?v*k+p*(1-k):v;o.push(p)});return o}
+function rsi(c,n=14){const o=Array(c.length).fill(null);let g=0,l=0;for(let i=1;i<c.length;i++){const d=c[i]-c[i-1],G=Math.max(d,0),L=Math.max(-d,0);if(i<=n){g+=G;l+=L;if(i==n){g/=n;l/=n;o[i]=100-100/(1+g/(l||1e-9))}}else{g=(g*(n-1)+G)/n;l=(l*(n-1)+L)/n;o[i]=100-100/(1+g/(l||1e-9))}}return o}
+function bb(c,n=20){return c.map((_,i)=>{if(i<n-1)return null;const s=c.slice(i-n+1,i+1),m=s.reduce((a,b)=>a+b)/n,sd=Math.sqrt(s.reduce((a,b)=>a+(b-m)**2,0)/n);return{u:m+2*sd,l:m-2*sd}})}
+function build(k){const c=k.map(x=>+x[4]),a=ema(c,12),b=ema(c,26),m=c.map((_,i)=>a[i]-b[i]),g=ema(m,9);return{c,r:rsi(c),e1:ema(c,20),e2:ema(c,50),h:m.map((v,i)=>v-g[i]),b:bb(c)}}
+function score(I,i){let s=0;const w=[],r=I.r[i],h=I.h[i],hp=I.h[i-1],b=I.b[i],p=I.c[i];
+if(r<30){s+=2;w.push('RSI '+r.toFixed(0)+': very low price zone (+2)')}else if(r<40){s+=1;w.push('RSI '+r.toFixed(0)+': lowish (+1)')}else if(r>70){s-=2;w.push('RSI '+r.toFixed(0)+': very high price zone (-2)')}else if(r>60){s-=1;w.push('RSI '+r.toFixed(0)+': highish (-1)')}else w.push('RSI '+r.toFixed(0)+': normal (0)');
+if(I.e1[i]>I.e2[i]){s+=1;w.push('Short trend above long trend: going up (+1)')}else{s-=1;w.push('Short trend below long trend: going down (-1)')}
+if(h>0&&h>hp){s+=1;w.push('Momentum rising (+1)')}else if(h<0&&h<hp){s-=1;w.push('Momentum falling (-1)')}else w.push('Momentum mixed (0)');
+if(p<b.l){s+=1;w.push('Price below normal range (+1)')}else if(p>b.u){s-=1;w.push('Price above normal range (-1)')}
+return{s,w}}
+function backtest(I){const H=12,T=.002;let n=0,w=0,n4=0,w4=0,last=-99;for(let i=60;i<I.c.length-H;i++){const s=score(I,i).s,t=s>=3?1:s<=-3?-1:0;if(!t||i-last<H)continue;last=i;const ok=(I.c[i+H]/I.c[i]-1)*t>T;n++;if(ok)w++;if(Math.abs(s)>=4){n4++;if(ok)w4++}}return{n,w,n4,w4}}
+async function load(s){try{const I=build(await api(`/api/v3/klines?symbol=${s}USDT&interval=${S.iv}&limit=500`)),i=I.c.length-1,r=I.c.slice(-50);Object.assign(ob(s),{sig:score(I,i),an:{rsi:I.r[i],e1:I.e1[i],e2:I.e2[i],bl:I.b[i].l,bu:I.b[i].u,sup:Math.min(...r),res:Math.max(...r)},bt:backtest(I),err:0})}catch(e){ob(s).err=1}}
+const reloadAll=()=>Promise.all(S.coins.map(c=>load(c.s))).then(upd);
+/* ---- UI ---- */
+function beep(){if(!$('#snd').checked)return;try{const a=new(window.AudioContext||webkitAudioContext)(),o=a.createOscillator();o.connect(a.destination);o.frequency.value=880;o.start();setTimeout(()=>{o.stop();a.close()},300)}catch(e){}}
+const T=(el,q,t,c)=>{const n=el.querySelector(q);n.textContent=t;if(c!==undefined)n.className=n.className.split(' ')[0]+' '+c};
+const MSG={BUY:'Price looks low and recovering - good time to buy.',SELL:'Price looks high or falling - good time to sell.',WAIT:'No clear signal. Better to wait.'};
+function upd(){let tI=0,tV=0,tR=0;const AL=[];S.coins.forEach(c=>{const d=D[c.s]||{},el=$('#c-'+c.s);if(!el)return;const p=d.p;
+if(c.al&&p&&((c.ad=='up'&&p>=c.al)||(c.ad=='dn'&&p<=c.al))){beep();notify(c.s+' price alert','Price reached $'+f(p));say(c.s+' price alert: reached $'+f(p));c.al=0;save();const ai=el.querySelectorAll('.set input');ai[ai.length-1].value=0}
+T(el,'.p','$'+f(p));T(el,'.chg',d.chg==null?'':(d.chg>0?'+':'')+d.chg.toFixed(2)+'% today',d.chg>=0?'up':'dn');
+const op=c.e.map((x,i)=>({...x,i})).filter(x=>!x.sold),inv=op.reduce((a,x)=>a+x.u,0),q=op.reduce((a,x)=>a+x.u/x.p,0),avg=q?inv/q:0,
+real=c.e.filter(x=>x.sold).reduce((a,x)=>a+x.u/x.p*(x.sold-x.p),0),room=Math.max(0,c.b-inv),step=c.b*c.st/100,s=d.sig?d.sig.s:0,st=Math.abs(s),
+amt=Math.min(room,step*(st>=5?1:st==4?.75:.5));
+let L='Loading signal...',m='',cl='hold',pct=0;const adv=[];
+if(d.err&&!d.sig){L='Signal not available';m='Could not load chart data. It will retry.'}
+if(d.sig){const tier=st>=5?'VERY STRONG':st==4?'STRONG':'MEDIUM';pct=st>=3?[0,0,0,60,80,100][st]:0;
+const bz=d.an?d.an.bl:0,tg0=q?avg*(1+c.tp/100):bz*(1+c.tp/100);
+if(s>=3){cl='buy'+(st>=4?' blink':'');L=room>0?`▲ BUY NOW $${amt.toFixed(0)}`:'▲ BUY signal (budget full)';m=`${tier} signal (${pct}%). Good time to buy a small amount. Sell target $${f(tg0)} (+${c.tp}%).`}
+else if(s<=-3){cl='sell'+(st>=4?' blink':'');L=q?'▼ SELL NOW':"▼ DON'T BUY";m=q?(p>avg?'Price looks weak. Sell now to protect your profit.':'Price looks weak. Sell to limit loss, or at least do not buy more.'):'Price looks weak. Do NOT buy now.'}
+else if(s==2){cl='nyet';L='⏳ NOT YET';m=`Almost a buy signal. Buy only if price falls to $${f(bz)}, or when it turns BUY.`}
+else{cl='hold';L=q?'✋ HOLD':'⏸ NO BUY NOW';m=q?`Keep your coins. Sell when price reaches $${f(tg0)}.`:`Signal is not clear. Wait for a BUY signal or a dip to $${f(bz)}.`}
+T(el,'.sc','Score '+(s>0?'+':'')+s+' of 5 (BUY at +3, SELL at -3)');
+el.querySelector('.why').innerHTML=d.sig.w.map(x=>'<li>'+x+'</li>').join('');
+const a=d.an;el.querySelector('.an').innerHTML=a?`<div class="grid"><span>RSI: <b>${a.rsi.toFixed(0)}</b> (under 30 cheap, over 70 expensive)</span><span>Trend: <b>${a.e1>a.e2?'Up':'Down'}</b></span><span>Support (50-candle low): <b>$${f(a.sup)}</b></span><span>Resistance (50-candle high): <b>$${f(a.res)}</b></span><span>Buy zone: below <b>$${f(a.bl)}</b></span><span>Sell zone: above <b>$${f(a.bu)}</b></span></div>`:'';
+const b=d.bt,n=st>=4?b.n4:b.n,w=st>=4?b.w4:b.w;T(el,'.bt',n?`Past accuracy of ${st>=4?'strong':'all'} signals on this coin (${S.iv} chart, last 500 candles): ${(100*w/n).toFixed(0)}% right out of ${n} signals`+(n<10?' - too few signals to trust':''):'Past accuracy: no signals of this strength in this history')}
+el.querySelector('.act').className='act '+cl;T(el,'.act b',L);T(el,'.act span',m);
+el.querySelector('.gauge u').style.left=((s+5)/10*100)+'%';el.className='card '+(s>=3?'gb':s<=-3?'gs':'');
+if(p){op.filter(x=>p>=x.p*(1+c.tp/100)).forEach(x=>adv.push(['g',`SELL entry #${x.i+1} (bought $${f(x.p)}) - target reached, profit +$${(x.u/x.p*p-x.u).toFixed(2)}`]));
+if(q&&p<=avg*(1-c.sl/100))adv.push(['rd',`STOP-LOSS: price is ${c.sl}% below your average - consider selling all to limit loss`]);
+if(s<=-3&&q&&p>avg)adv.push(['rd',`SELL signal and you are in profit - consider selling all (+$${(q*p-inv).toFixed(2)})`]);
+if(s>=3&&room>0)adv.push(['g',`BUY $${amt.toFixed(0)} now - small step (${c.st}% of your $${c.b} budget)`]);
+const lp=op.length?op[op.length-1].p:0;if(q&&room>0&&s>-3&&p<=lp*(1-c.ld/100))adv.push(['g',`Price fell ${c.ld}% below your last buy ($${f(lp)}) - you may add a small $${Math.min(room,step).toFixed(0)}`]);
+if(q&&room<=0)adv.push(['',`Budget full ($${c.b}) - do not buy more`]);
+if(q)adv.push(['',`Sell plan: sell at $${f(avg*(1+c.tp/100))} (+${c.tp}%). Stop-loss $${f(avg*(1-c.sl/100))}.`]);
+else if(s<3&&d.an)adv.push(['',`Buy plan: not yet. Buy when price falls to $${f(d.an.bl)} or when a BUY signal appears.`])}
+if(!adv.length)adv.push(['','Nothing to do now - wait.']);
+if(s>=3&&room>0)AL.push(['b',`▲ BUY ${c.s} $${amt.toFixed(0)}`,c.s]);if(s<=-3)AL.push(['s',q?`▼ SELL ${c.s}`:`▼ DON'T BUY ${c.s}`,c.s]);
+const ns=p?op.filter(x=>p>=x.p*(1+c.tp/100)).length:0;if(ns)AL.push(['s',`▼ SELL ${c.s} (${ns} target hit)`,c.s]);if(q&&p&&p<=avg*(1-c.sl/100))AL.push(['s',`▼ ${c.s} STOP-LOSS`,c.s]);
+el.querySelector('.todo').innerHTML='<b>What to do now</b><br>'+adv.map(x=>`<span class="${x[0]}">• ${x[1]}</span>`).join('<br>');
+const pe=el.querySelector('.pos');tR+=real;
+if(!c.e.length)pe.innerHTML='<small>No buys yet. Add each buy below - every buy gets its own sell target and live profit.</small>';
+else{const rows=c.e.map((x,i)=>{const qq=x.u/x.p,del=`<i onclick="de('${c.s}',${i})">✕</i>`;
+if(x.sold){const rp=qq*(x.sold-x.p);return`<tr class="dim"><td>#${i+1}</td><td>$${f(x.p)}</td><td>$${+x.u.toFixed(2)}</td><td colspan="2" class="${rp>=0?'up':'dn'}">SOLD @ $${f(x.sold)}: ${rp>=0?'+':''}${rp.toFixed(2)}$</td><td>${del}</td></tr>`}
+const tg=x.p*(1+c.tp/100),pl=p?qq*p-x.u:0,hit=p&&p>=tg;return`<tr><td>#${i+1}</td><td>$${f(x.p)}</td><td>$${+x.u.toFixed(2)}</td><td class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${pl.toFixed(2)}$ (${(pl/x.u*100).toFixed(1)}%)</td><td>$${f(tg)}</td><td>${hit?'<span class="pill buy blink">SELL</span>':'Hold'} <button class="sm" onclick="sd('${c.s}',${i})">Sold</button> ${del}</td></tr>`}).join('');
+let sum='';if(q){const tg=avg*(1+c.tp/100),sl=avg*(1-c.sl/100),pl=p?p*q-inv:0;if(p){tI+=inv;tV+=p*q}
+sum=`<div class="sumb"><b>FINAL (open buys)</b><br>Average buy: <b>$${f(avg)}</b> | Coins: ${q.toFixed(4)} | Invested: $${inv.toFixed(2)}<br><span class="${pl>=0?'up':'dn'}">Profit/Loss now: <b>${pl>=0?'+':''}${pl.toFixed(2)}$ (${p?(pl/inv*100).toFixed(2):'0.00'}%)</b></span><br>Average sell target: <b>$${f(tg)}</b> (profit if sold there: +$${(q*tg-inv).toFixed(2)}) | Stop-loss: <b>$${f(sl)}</b>${real?`<br>Already sold (realized): <b class="${real>=0?'up':'dn'}">${real>=0?'+':''}${real.toFixed(2)}$</b>`:''}</div>`}
+pe.innerHTML=`<div style="overflow-x:auto"><table><tr><th>#</th><th>Bought at</th><th>Amount</th><th>Profit now</th><th>Sell at</th><th>Action</th></tr>${rows}</table></div>`+sum}
+const k=L+'|'+adv.filter(x=>x[0]).map(x=>x[1].slice(0,14)).join();if(d.k&&d.k!==k&&/BUY NOW|SELL|STOP/.test(k)){beep();notify(c.s+': '+L,adv.map(x=>x[1]).join(' | ').slice(0,200))}d.k=k});
+$('#alerts').innerHTML=AL.length?AL.map(a=>`<span class="chip ${a[0]}" onclick="document.getElementById('c-${a[2]}').scrollIntoView({behavior:'smooth'})">${a[1]}</span>`).join(''):'<span class="sc">No active signals. Waiting...</span>';
+if(Date.now()-(window.stT||0)>2000){window.stT=Date.now();halt();if(S.po.st)renderStats();if(S.po.bz)renderBiz()}
+document.title=(AL.length?'('+AL.length+') ':'')+'Coin Signal Tracker';
+const tp=tV-tI;$('#sum').innerHTML=tI||tR?`<b>All coins:</b> invested (open) $${tI.toFixed(2)} | now $${tV.toFixed(2)} | <b class="${tp>=0?'up':'dn'}">${tp>=0?'+':''}${tp.toFixed(2)}$</b>${tR?` | realized <b class="${tR>=0?'up':'dn'}">${tR>=0?'+':''}${tR.toFixed(2)}$</b>`:''}`:'Add your buys to see total profit/loss here.'}
+function draw(){$('#list').innerHTML=S.coins.map(c=>`<div class="card" id="c-${c.s}">
+<div class="h"><b>${c.s} / USDT</b><a href="https://www.binance.com/en/trade/${c.s}_USDT?type=spot" target="_blank" rel="noopener">Trade on Binance ↗</a><button class="x" onclick="rm('${c.s}')" title="Remove">✕</button></div>
+<div><span class="p">...</span><span class="chg"></span></div>
+<div class="act hold"><b>...</b><span></span><div class="gauge"><u></u></div><div class="gl"><span>▼ SELL</span><span>NOT CLEAR / HOLD</span><span>BUY ▲</span></div></div>
+<div class="todo"></div>
+<details open><summary>My buys - every entry live</summary><div class="pos"></div>
+<div class="row">I bought at <input class="ep" type="number" step="any" placeholder="price"> for $<input class="eu" type="number" step="any" placeholder="USDT"><button onclick="ae('${c.s}')">+ Add</button></div><div class="row"><button class="sm" onclick="sp('${c.s}')">Sell part of my coins</button> <span class="sc">(e.g. sold $200 of a $300 buy: the rest stays open)</span></div></details>
+<details><summary>Settings (changes apply live)</summary><div class="set">${[['b','Budget for this coin ($)'],['st','Buy step (% of budget)'],['ld','Add more if price falls (%)'],['tp','Sell profit target (%)'],['sl','Stop-loss (%)'],['al','Price alert at ($, 0 = off)']].map(([k,t])=>`<label>${t}<input type="number" value="${c[k]||0}" oninput="sv('${c.s}','${k}',this.value)"></label>`).join('')}</div></details>
+<details><summary>Full analysis and past accuracy</summary><div class="an"></div><div class="sc"></div><ul class="why"></ul><div class="bt"></div></details></div>`).join('');
+$('#chips').innerHTML=['BTC','ETH','BNB','SOL','XRP','ZEC','DOGE'].filter(x=>!gc(x)).map(x=>`<button onclick="addCoin('${x}')">+ ${x}</button>`).join('');upd()}
+const gc=s=>S.coins.find(c=>c.s==s);
+function ae(s){const el=$('#c-'+s),p=+el.querySelector('.ep').value,u=+el.querySelector('.eu').value;if(p>0&&u>0){gc(s).e.push({p,u,t:Date.now()});save();draw()}else alert('Please type buy price and USDT amount.')}
+function sd(s,i){const n=+prompt('Sold at what price? (USDT)');if(n>0){gc(s).e[i].sold=n;gc(s).e[i].st=Date.now();save();draw()}}
+function sp(s){const c=gc(s),pr=+prompt('Sell price (USDT per coin)?');if(!(pr>0))return;const rec=+prompt('How much did you sell? Total USDT you received');if(!(rec>0))return;
+let rem=rec/pr;const tot=c.e.filter(x=>!x.sold).reduce((a,x)=>a+x.u/x.p,0);if(rem>tot*1.0001){alert('You hold only about '+(tot*pr).toFixed(2)+' USDT of '+c.s+' at this price.');return}
+const ne=[];c.e.forEach(x=>{if(x.sold||rem<=1e-12){ne.push(x);return}const eq=x.u/x.p,t=Math.min(eq,rem);rem-=t;ne.push({p:x.p,u:t*x.p,sold:pr,st:Date.now()});if(eq-t>1e-9)ne.push({p:x.p,u:(eq-t)*x.p})});c.e=ne;save();draw()}
+function de(s,i){gc(s).e.splice(i,1);save();draw()}
+function sv(s,k,v){const c=gc(s);c[k]=+v||0;if(k=='al')c.ad=(D[s]&&D[s].p>c.al)?'dn':'up';save();upd()}
+function rm(s){S.coins=S.coins.filter(c=>c.s!=s);save();draw();connect()}
+const say=t=>{$('#msg').textContent=t;setTimeout(()=>{if($('#msg').textContent==t)$('#msg').textContent=''},5000)};
+async function valid(s){for(const h of H){try{const r=await fetch(h+'/api/v3/ticker/price?symbol='+s+'USDT');if(r.ok)return true;if(r.status==400)return false}catch(e){}}return null}
+async function addCoin(x){const i=$('#ni'),s=(typeof x=='string'?x:i.value).toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/USDT$/,'');
+if(!s){say('Type a coin name first, e.g. ZEC');return}
+if(gc(s)){say(s+' is already in your list');return}
+S.coins.push({s,tp:10,sl:10,b:500,st:20,ld:5,e:[]});i.value='';save();draw();connect();poll();load(s).then(upd);say(s+' added. Checking on Binance...');
+const v=await valid(s);if(v===false){S.coins=S.coins.filter(c=>c.s!=s);save();draw();connect();say(s+'USDT was not found on Binance. Please check the coin name.')}else if(v)say(s+' added ✓')}
+
+/* ---- notifications ---- */
+function notify(t,b){if(window.Notification&&Notification.permission=='granted'){try{new Notification(t,{body:b})}catch(e){}}}
+function enNotif(){if(!window.Notification){alert('This browser does not support notifications. Use the Telegram alerts instead.');return}Notification.requestPermission().then(p=>{$('#nt').textContent=p=='granted'?'(on)':'(off)';if(p=='granted')notify('Notifications on','You will get BUY / SELL alerts while this page is open.')})}
+function cpAlert(){const o={iv:S.iv,scan:{on:true,top:20,minScore:4},budget:S.pl.bg,rk:S.pl.rk,smc:{on:true,minWR:S.sm.wr,max:S.sm.max},coins:S.coins.map(c=>({s:c.s,tp:c.tp,sl:c.sl,entries:c.e.filter(x=>!x.sold).map(x=>({p:x.p,u:x.u}))}))},t=JSON.stringify(o,null,2);navigator.clipboard.writeText(t).then(()=>say('Copied! Paste it into coins.json on GitHub.'),()=>prompt('Copy this into coins.json:',t))}
+/* ---- shared cache + auto-update scheduler ---- */
+const KC={};let TC=null,nextAt=0,arBusy=false;
+async function kl(sym,iv=S.iv){const k=sym+iv,c=KC[k];if(c&&Date.now()-c.t<120000)return c.d;const d=await api(`/api/v3/klines?symbol=${sym}&interval=${iv}&limit=500`);KC[k]={t:Date.now(),d};return d}
+async function t24(){if(TC&&Date.now()-TC.t<60000)return TC.d;const d=await api('/api/v3/ticker/24hr');TC={t:Date.now(),d};return d}
+async function tick(){const cd=$('#cd');if(document.hidden){cd.textContent='paused (tab hidden)';return}
+if(arBusy){cd.textContent='updating...';return}
+const left=Math.ceil((nextAt-Date.now())/1000);if(left>0){cd.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');return}
+arBusy=true;cd.textContent='updating...';try{await runSmc();await runScan();await runPlan()}catch(e){}
+const bad=/Could not/.test($('#scmsg').textContent+$('#plmsg').textContent+$('#smmsg').textContent);arBusy=false;nextAt=Date.now()+(bad?30000:S.ar*60000)}
+function showPanels(){$('#biz').style.display=S.po.bz?'block':'none';if(S.po.bz){bzSet();renderBiz()}$('#sta').style.display=S.po.st?'block':'none';if(S.po.st)renderStats();$('#mov').style.display=S.po.mv?'block':'none';$('#smc').style.display=S.po.sm?'block':'none';$('#scan').style.display=S.po.sc?'block':'none';$('#plan').style.display=S.po.pl?'block':'none'}
+/* ---- Market scanner ---- */
+const STB=/^(USDC|FDUSD|TUSD|USDP|BUSD|DAI|EUR|AEUR|USDE|XUSD|USD1)$/;let scanOn=false,scanBusy=false,scanTimer;
+function togScan(){S.po.sc=!S.po.sc;save();showPanels()}
+async function runScan(){if(scanBusy)return;scanBusy=true;const msg=$('#scmsg');
+try{msg.textContent='Loading market list...';
+const all=await t24(),list=all.filter(x=>x.symbol.endsWith('USDT')&&!STB.test(x.symbol.slice(0,-4))&&+x.quoteVolume>5e6).sort((a,b)=>b.quoteVolume-a.quoteVolume).slice(0,40),res=[];let done=0;
+const job=async x=>{const n=x.symbol.slice(0,-4);try{const I=build(await kl(x.symbol)),i=I.c.length-1,p=I.c[i];res.push({s:n,p,chg:+x.priceChangePercent,sc:score(I,i).s,up:(Math.max(...I.c.slice(-200))/p-1)*100,bl:I.b[i].l,bt:backtest(I),tr:I.e1[i]>I.e2[i]})}catch(e){}msg.textContent=`Scanning ${++done}/${list.length}...`};
+for(let i=0;i<list.length;i+=8)await Promise.all(list.slice(i,i+8).map(job));
+const btc=res.find(r=>r.s=='BTC'),weak=btc&&(btc.sc<=-2||(!btc.tr&&btc.chg<-2)),good=btc&&btc.tr&&btc.sc>=0;
+const pick=res.filter(r=>r.sc>=2).sort((a,b)=>b.sc-a.sc||b.up-a.up).slice(0,10),bad=res.filter(r=>r.sc<=-3).sort((a,b)=>a.sc-b.sc).slice(0,8);
+const row=r=>{const buy=r.sc>=3,base=buy?r.p:r.bl,b=r.bt,acc=b.n?`${(100*b.w/b.n).toFixed(0)}% of ${b.n}`:'-';
+return`<tr><td><b>${r.s}</b></td><td>$${f(r.p)}</td><td class="${r.chg>=0?'up':'dn'}">${r.chg.toFixed(1)}%</td><td><span class="pill ${buy?'buy':'hold'}">${buy?'▲ BUY NOW':'⏳ NOT YET'}</span> ${Math.min(r.sc,5)*20}%</td><td>${buy?'Now ~$'+f(r.p):'Buy only when price falls to $'+f(r.bl)}</td><td>$${f(base*1.1)} / $${f(base*1.2)}</td><td>$${f(base*.92)}</td><td class="${r.up>=10?'up':''}">+${r.up.toFixed(0)}%</td><td>${acc}</td><td><button class="sm" onclick="addCoin('${r.s}')">+ Add</button> <a href="https://www.binance.com/en/trade/${r.s}_USDT?type=spot" target="_blank" rel="noopener" style="color:var(--y)">Binance ↗</a></td></tr>`};
+$('#scout').innerHTML=`<div class="todo"><b>Market condition:</b> <span class="${weak?'rd':good?'g':''}">${weak?'WEAK - Bitcoin is falling. Buy only very small amounts or wait.':good?'HEALTHY - Bitcoin trend is up. Good for buying on dips.':'MIXED - Bitcoin is sideways. Be selective.'}</span>${btc?` (BTC ${btc.chg.toFixed(1)}% today)`:''}</div>`+
+(pick.length?`<div style="overflow-x:auto"><table><tr><th>Coin</th><th>Price</th><th>24h</th><th>Signal / strength</th><th>Buy at</th><th>Sell at +10% / +20%</th><th>Stop-loss (-8%)</th><th>Room up</th><th>Past accuracy</th><th></th></tr>${pick.map(row).join('')}</table></div>`:'<div class="sc" style="padding:8px">No good setup right now. Waiting is also a position - scanner rechecks every 5 minutes.</div>')+
+(bad.length?`<div class="todo"><b class="rd">▼ DON'T BUY / sell (weak coins):</b> ${bad.map(r=>`<span class="chip s">${r.s}</span>`).join(" ")}</div>`:"")+`<div class="foot">Scanned the top ${res.length} USDT coins by volume on the ${S.iv} chart at ${new Date().toLocaleTimeString()}. The +10% / +20% levels are a plan, not a prediction. "Room up" = distance to the highest price of the last 200 candles (green = 10% or more). Sell early if the coin's SELL signal appears. Stop-loss -8% is a default assumption.</div>`;
+msg.textContent=''}catch(e){msg.textContent='Could not load market data. Check connection and press Rescan.'}scanBusy=false}
+
+/* ---- Top Coins Plan ---- */
+const PL={res:[],busy:0};let plOn=false,plTimer;
+function plSet(){const P=S.pl;$('#plset').innerHTML=[['bg','Total budget ($)'],['rk','Risk per trade (% of budget)'],['T','Profit target (%)'],['St','Stop-loss (%)']].map(([k,t])=>`<label>${t}<input type="number" value="${P[k]}" oninput="spv('${k}',this.value)"></label>`).join('')+`<label>Coins to scan<select onchange="spv('N',this.value);runPlan()">${[20,30,50].map(n=>`<option ${P.N==n?'selected':''}>${n}</option>`).join('')}</select></label>`}
+function spv(k,v){S.pl[k]=+v||0;save();renderPlan()}
+function togPlan(){S.po.pl=!S.po.pl;save();showPanels()}
+function sim(I,T,St,F){const H=72,n=I.c.length,o=[];let last=-99;for(let i=60;i<n-1;i++){if(I.sg[i]<3||i-last<12)continue;last=i;let r=null,k=0;for(let j=i+1;j<=Math.min(i+H,n-1);j++){const g=I.c[j]/I.c[i]-1;if(g>=T){r=T;k=j-i;break}if(g<=-St){r=-St;k=j-i;break}}if(r==null){if(n-1-i<H)continue;r=I.c[i+H]/I.c[i]-1;k=H}o.push({r:r-F,k})}return o}
+async function runPlan(){if(PL.busy)return;PL.busy=1;const msg=$('#plmsg');
+try{msg.textContent='Loading market list...';const all=await t24(),list=all.filter(x=>x.symbol.endsWith('USDT')&&!STB.test(x.symbol.slice(0,-4))&&+x.quoteVolume>5e6).sort((a,b)=>b.quoteVolume-a.quoteVolume).slice(0,S.pl.N),res=[];let done=0;
+const job=async x=>{try{const I=build(await kl(x.symbol)),i=I.c.length-1;I.sg=I.c.map((_,k)=>k>=60?score(I,k).s:0);res.push({s:x.symbol.slice(0,-4),p:I.c[i],chg:+x.priceChangePercent,sc:I.sg[i],bl:I.b[i].l,tr:I.e1[i]>I.e2[i],I})}catch(e){}msg.textContent=`Scanning ${++done}/${list.length}...`};
+for(let i=0;i<list.length;i+=8)await Promise.all(list.slice(i,i+8).map(job));
+PL.res=res;PL.t=Date.now();msg.textContent='';renderPlan()}catch(e){msg.textContent='Could not load market data. Check connection and press Rescan.'}PL.busy=0}
+function renderPlan(){const P=S.pl,res=PL.res;if(!res.length)return;const mins={'15m':15,'1h':60,'4h':240,'1d':1440}[S.iv],F=.002,T=P.T/100,St=P.St/100,
+btc=res.find(r=>r.s=='BTC'),weak=btc&&(btc.sc<=-2||(!btc.tr&&btc.chg<-2)),good=btc&&btc.tr&&btc.sc>=0,mf=weak?.5:good?1:.75;
+res.forEach(r=>{const t=sim(r.I,T,St,F),ks=t.map(x=>x.k).sort((a,b)=>a-b);r.n=t.length;r.w=t.filter(x=>x.r>0).length;r.av=r.n?t.reduce((a,x)=>a+x.r,0)/r.n:0;r.mk=ks.length?ks[ks.length>>1]:0;
+r.act=r.sc>=3?'BUY':r.sc>=2?'WATCH':r.sc<=-3?'SELL':'WAIT';r.skip=r.act=='BUY'&&r.n>=5&&r.av<=0;
+r.raw=r.act=='BUY'&&!r.skip&&St>0?P.bg*P.rk/100/St*(r.sc/5)*mf*(r.n<5?.5:1):0});
+const tot=res.reduce((a,r)=>a+r.raw,0),k=tot>P.bg*.6?P.bg*.6/tot:1;res.forEach(r=>r.use=r.raw*k);
+const ord={BUY:0,WATCH:1,WAIT:2,SELL:3},L=[...res].sort((a,b)=>ord[a.act]-ord[b.act]||b.use-a.use||b.sc-a.sc);
+const when=r=>{if(r.act=='SELL')return'Price weak: do not buy (sell if you own it)';if(r.act=='WAIT')return'No trade now - signal not clear';const d=new Date(Date.now()+r.mk*mins*6e4).toLocaleString([],{weekday:'short',hour:'2-digit',minute:'2-digit'});
+return(r.act=='BUY'?'Buy now':'Buy only when price falls to $'+f(r.bl))+(r.n>=3?`, usual exit ~${Math.max(1,Math.round(r.mk*mins/60))}h (by ${d})`:' (too few past trades for timing)')};
+const rw=(r,i)=>{const base=r.act=='BUY'?r.p:r.bl,cl=r.act=='BUY'?'buy':r.act=='SELL'?'sell':'hold',tag={BUY:'▲ BUY NOW',SELL:"▼ DON'T BUY / SELL",WATCH:'⏳ NOT YET',WAIT:'⏸ NO TRADE'}[r.act];
+return`<tr><td>${i+1}</td><td><b>${r.s}</b></td><td>$${f(r.p)}</td><td class="${r.chg>=0?'up':'dn'}">${r.chg.toFixed(1)}%</td><td><span class="pill ${cl}">${tag}</span> ${Math.abs(r.sc)>=2?Math.abs(r.sc)*20+'%':''}</td><td>${when(r)}</td><td>${r.act=='BUY'||r.act=='WATCH'?`$${f(base*(1+T))} / stop $${f(base*(1-St))}`:'-'}</td><td>${r.use>0?'<b>$'+r.use.toFixed(0)+'</b>':r.skip?'<span class="dn">Skip (past results negative)</span>':'-'}</td><td>${r.use>0?`<span class="up">+$${(r.use*T).toFixed(0)}</span> / <span class="dn">-$${(r.use*St).toFixed(0)}</span>`:'-'}</td><td>${r.n?`${(100*r.w/r.n).toFixed(0)}% win, avg ${(r.av*100).toFixed(1)}%, ${r.n} trades`:'no past signals'}</td><td><button class="sm" onclick="addCoin('${r.s}')">+ Add</button> <a href="https://www.binance.com/en/trade/${r.s}_USDT?type=spot" target="_blank" rel="noopener" style="color:var(--y)">↗</a></td></tr>`};
+const dep=L.reduce((a,r)=>a+r.use,0),ex=L.reduce((a,r)=>a+r.use*r.av,0),nm=a=>L.filter(r=>r.act==a).map(r=>r.s).join(', ')||'none';
+$('#plout').innerHTML=`<div class="todo"><b>Market condition:</b> <span class="${weak?'rd':good?'g':''}">${weak?'WEAK - Bitcoin falling. Position sizes cut by 50%.':good?'HEALTHY - Bitcoin trend up. Full position sizes.':'MIXED - Bitcoin sideways. Position sizes cut by 25%.'}</span>${btc?` (BTC ${btc.chg.toFixed(1)}% today)`:''}</div>
+<div class="sumb"><b>Today's plan for $${P.bg}</b><br>Use now: <b>$${dep.toFixed(0)}</b> (${(dep/P.bg*100||0).toFixed(0)}%), keep cash: <b>$${(P.bg-dep).toFixed(0)}</b><br><span class="up">If all hit +${P.T}% target: +$${(dep*T).toFixed(0)}</span> | <span class="dn">If all hit -${P.St}% stop: -$${(dep*St).toFixed(0)}</span><br>Estimate from past results: <b class="${ex>=0?'up':'dn'}">${ex>=0?'+':''}$${ex.toFixed(0)}</b> (history average, not a promise)</div>
+<div class="grid" style="margin:8px 0;font-size:13px"><span class="up">▲ BUY NOW: ${nm('BUY')}</span><span style="color:var(--y)">⏳ NOT YET (buy only at the dip price): ${nm('WATCH')}</span><span class="dn">▼ DON'T BUY / SELL: ${nm('SELL')}</span><span class="dim">No trade (signal unclear): ${nm('WAIT')}</span></div>
+<div style="overflow-x:auto"><table><tr><th>#</th><th>Coin</th><th>Price</th><th>24h</th><th>Signal</th><th>Timeline</th><th>Sell target / stop</th><th>Use ($)</th><th>Profit / loss</th><th>Past results</th><th></th></tr>${L.map(rw).join('')}</table></div>
+<div class="foot">Updated ${new Date(PL.t).toLocaleTimeString()} on the ${S.iv} chart. How it is calculated: Use ($) = (budget x risk%) / stop% x signal strength x market factor, never more than 60% of budget in total, halved when fewer than 5 past trades, zero when past results are negative. Past results = every earlier BUY signal on this coin replayed on the last 500 candles: exit at target, stop, or after 72 candles, minus 0.2% fees (assumption: 0.1% per side), closing prices only. Timeline = median length of those past trades. More trades = more reliable (4h chart gives a longer history). This is analysis, not a guarantee.</div>`;const nb=res.filter(r=>r.act=='BUY').map(r=>r.s);if(PL.pb){const n=nb.filter(x=>!PL.pb.includes(x));if(n.length){beep();notify('New BUY signals',n.join(', '))}}PL.pb=nb}
+
+/* ---- Smart Money Signals ---- */
+const MV={res:[],t:0},LP={},SM={up:true,scan:0,setups:0,busy:0};
+const hrs=t=>new Date(t).toLocaleString([],{weekday:'short',hour:'2-digit',minute:'2-digit'});
+function smSet(){const P=S.pl,M=S.sm;$('#smset').innerHTML=`<label>Fund ($)<input type="number" value="${P.bg}" oninput="spv('bg',this.value);renderSmc()"></label><label>Risk per trade (% of fund)<input type="number" value="${P.rk}" oninput="spv('rk',this.value);renderSmc()"></label><label>Min past win rate (%)<input type="number" value="${M.wr}" oninput="S.sm.wr=+this.value||0;save()"></label><label>Max signals per day (1-5)<input type="number" value="${M.max}" oninput="S.sm.max=Math.min(5,Math.max(1,+this.value||1));save()"></label>`}
+async function runSmc(){if(SM.busy)return;if(typeof SMC=='undefined'){$('#mvout').innerHTML=$('#smout').innerHTML='<div class="dn" style="padding:8px">smc.js file is missing. Upload smc.js next to index.html.</div>';return}
+SM.busy=1;const msg=$('#smmsg');
+try{msg.textContent='Loading market...';const all=await t24();all.forEach(x=>LP[x.symbol]=+x.lastPrice);
+const list=all.filter(x=>x.symbol.endsWith('USDT')&&!STB.test(x.symbol.slice(0,-4))&&+x.quoteVolume>5e6).sort((a,b)=>b.quoteVolume-a.quoteVolume).slice(0,50),res=[],mv=[];let n=0;
+const job=async x=>{try{const raw=await kl(x.symbol,'1h'),r=SMC.analyse(raw),m=SMC.movers(raw);r.s=m.s=x.symbol.slice(0,-4);m.chg=+x.priceChangePercent;res.push(r);mv.push(m)}catch(e){}msg.textContent=`Analysing ${++n}/${list.length}...`;$('#mvmsg').textContent=msg.textContent};
+for(let i=0;i<list.length;i+=8)await Promise.all(list.slice(i,i+8).map(job));
+const btc=res.find(r=>r.s=='BTC');SM.up=btc?btc.up:true;SM.scan=res.length;SM.setups=res.filter(r=>r.sig).length;MV.res=mv;MV.t=Date.now();renderMov();
+const today=new Date().toDateString(),made=S.sm.list.filter(g=>new Date(g.t).toDateString()==today).length,fresh=[];
+for(const r of SMC.pick(res,{minWR:S.sm.wr})){if(made+fresh.length>=S.sm.max)break;if(S.sm.list.some(g=>g.s==r.s&&g.st=='open'))continue;fresh.push(r);S.sm.list.unshift({s:r.s,t:Date.now(),...r.sig,wr:r.st.wr,n:r.st.n,avg:r.st.avg,mk:r.st.mk,st:'open',inz:0})}
+S.sm.list=S.sm.list.slice(0,60);if(fresh.length){save();beep();notify('New smart-money BUY signal',fresh.map(r=>r.s).join(', '))}
+msg.textContent='';$('#mvmsg').textContent='';SM.t=Date.now();renderSmc()}catch(e){msg.textContent='Could not load market data. Will retry.'}SM.busy=0}
+
+
+async function fng(){try{const j=await(await fetch('https://api.alternative.me/fng/')).json(),d=j.data[0],v=+d.value,c=v<=25?'#f6465d':v<45?'#ff8a3d':v<=55?'#fcd535':v<75?'#9be15d':'#0ecb81';$('#fg').innerHTML=`Market mood: <b style="color:${c}">${v} ${d.value_classification}</b>`;$('#fg').title='Fear & Greed index (alternative.me). Under 25 = extreme fear, over 75 = extreme greed. A mood gauge, not a buy/sell signal.'}catch(e){}}
+function exp(){const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='crypto-tracker-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click()}
+function imp(inp){const fl=inp.files[0];if(!fl)return;fl.text().then(t=>{try{const o=JSON.parse(t);if(!Array.isArray(o.coins))throw 0;if(confirm('Replace ALL current data with this backup?')){localStorage.setItem('ct1',t);location.reload()}}catch(e){alert('This file is not a valid backup.')}})}
+/*STATS*/function renderStats(){const fund=S.pl.bg||1,mo={},by={},rows=[];let ex=0,ul=0,mx=0,gw=0,gl=0,w=0,nn=0;
+S.coins.forEach(c=>{const p=(D[c.s]||{}).p;let rl=0,k=0;
+c.e.forEach(x=>{if(!x.sold)return;const g=x.u/x.p*(x.sold-x.p);rl+=g;k++;nn++;if(g>0){w++;gw+=g}else gl-=g;const m=x.st?new Date(x.st).toISOString().slice(0,7):'earlier';mo[m]=(mo[m]||0)+g});if(k)by[c.s]=rl;
+const op=c.e.filter(x=>!x.sold),inv=op.reduce((a,x)=>a+x.u,0),q=op.reduce((a,x)=>a+x.u/x.p,0);if(inv){const v=p?p*q:inv;ex+=inv;ul+=v-inv;mx+=inv*c.sl/100;rows.push({s:c.s,inv})}});
+const rt=Object.values(by).reduce((a,b)=>a+b,0),ks=Object.keys(by).sort((a,b)=>by[b]-by[a]),m$=v=>`<b class="${v>=0?'up':'dn'}">${v>=0?'+':''}${v.toFixed(2)}$</b>`,bx=(t,v)=>`<div>${t}<b>${v}</b></div>`,pf=gl?(gw/gl).toFixed(2):gw?'no losses':'-';
+const top=rows.slice().sort((a,b)=>b.inv-a.inv)[0],wn=[];
+if(ex>fund*.8)wn.push('More than 80% of your fund is in coins. Keep some cash for dips.');
+if(top&&rows.length>1&&top.inv/ex>.4)wn.push(`${top.s} is ${(top.inv/ex*100).toFixed(0)}% of your open money - too concentrated.`);
+if(rows.length==1)wn.push('All your open money is in one coin. Spreading over 3-5 coins lowers risk.');
+if(mx>fund*.1)wn.push(`If every stop-loss hits you lose $${mx.toFixed(0)} (${(mx/fund*100).toFixed(0)}% of fund) - above the usual 10% limit.`);
+const col=ex>fund*.8?'#f6465d':ex>fund*.5?'#fcd535':'#0ecb81';
+$('#stout').innerHTML=`<h3 style="margin:12px 0 4px;font-size:15px">Performance (your closed trades)</h3><div class="zone" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${bx('Closed trades',nn)}${bx('Win rate',nn?(w/nn*100).toFixed(0)+'% ('+w+' of '+nn+')':'-')}${bx('Realized profit/loss',m$(rt))}${bx('Profit factor',pf)}${bx('Best coin',ks.length?ks[0]+' '+by[ks[0]].toFixed(2)+'$':'-')}${bx('Worst coin',ks.length?ks[ks.length-1]+' '+by[ks[ks.length-1]].toFixed(2)+'$':'-')}</div>
+${Object.keys(mo).length?`<div class="sc" style="margin-top:8px">By month: ${Object.keys(mo).sort().reverse().map(k=>k+' '+m$(mo[k])).join(' | ')}</div>`:'<div class="sc" style="margin-top:8px">Use "Sold" or "Sell part of my coins" on a coin card and your results appear here.</div>'}
+<h3 style="margin:14px 0 4px;font-size:15px">Risk (open positions, fund $${fund})</h3><div class="bar"><i style="width:${Math.min(100,ex/fund*100)}%;background:${col}"></i></div>
+<div class="zone" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${bx('Money in coins','$'+ex.toFixed(2)+' ('+(ex/fund*100).toFixed(0)+'%)')}${bx('Cash left','$'+Math.max(0,fund-ex).toFixed(2))}${bx('Unrealized profit/loss',m$(ul))}${bx('If all stop-losses hit','-$'+mx.toFixed(2))}</div>
+<div class="sc" style="margin-top:8px">${rows.map(r=>`${r.s} $${r.inv.toFixed(0)} (${(r.inv/ex*100).toFixed(0)}%)`).join(' | ')}</div>
+<div class="todo" style="margin-top:8px">${wn.length?wn.map(x=>'<span class="rd">• '+x+'</span>').join('<br>'):(rows.length?'<span class="g">• Risk looks balanced.</span>':'No open positions.')}</div>
+<h3 style="margin:14px 0 4px;font-size:15px">Backup</h3><div class="sc">Your data is saved only in this browser. Download a backup so you never lose it, or move to another device.</div>
+<div class="row"><button onclick="exp()">⬇ Download backup</button><label class="sm" style="background:#2b3139;border-radius:6px;padding:8px 12px;cursor:pointer">⬆ Restore backup<input type="file" accept=".json" onchange="imp(this)" style="display:none"></label></div>`}
+
+/* ---- Business Planner ---- */
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function mc(B,wr,runs=500){const R=rng(42),n=B.tr*12,f=Math.min(.25,B.r/B.al),fw=f*(B.aw-2*B.fee)/100,fl=f*(B.al+2*B.fee)/100,end=[],dd=[],mon=Array.from({length:13},()=>[]);
+for(let k=0;k<runs;k++){let e=1,pk=1,md=0;mon[0].push(1);for(let i=1;i<=n;i++){e*=R()<wr/100?1+fw:1-fl;pk=Math.max(pk,e);md=Math.max(md,1-e/pk);if(i%B.tr==0)mon[i/B.tr].push(e)}end.push(e);dd.push(md)}
+const q=(a,p)=>a.slice().sort((x,y)=>x-y)[Math.floor(p*(a.length-1))];
+return{p10:q(end,.1),med:q(end,.5),p90:q(end,.9),loss:end.filter(x=>x<1).length/runs,ddp:dd.filter(x=>x>=B.dd/100).length/runs,path:mon.map(a=>q(a,.5)),f}}
+function pnl(){let rl=0,ul=0,inv=0,mrl=0;const m=new Date().toISOString().slice(0,7);S.coins.forEach(c=>{const p=(D[c.s]||{}).p;c.e.forEach(x=>{if(x.sold){const g=x.u/x.p*(x.sold-x.p);rl+=g;if(x.st&&new Date(x.st).toISOString().slice(0,7)==m)mrl+=g}else{inv+=x.u;if(p)ul+=x.u/x.p*p-x.u}})});return{rl,ul,inv,mrl}}
+const bzBase=()=>S.bz.cap+S.bz.flows.reduce((a,x)=>a+x.a,0);
+function halt(){const B=S.bz,b=pnl(),base=bzBase(),h=b.mrl<=-base*B.ml/100;$('#bzh').innerHTML=h?`<div class="todo"><span class="rd"><b>⛔ Monthly loss limit reached</b> (${b.mrl.toFixed(0)}$ = ${(b.mrl/base*100).toFixed(1)}% of capital). Pause new buys until next month and review your trades.</span></div>`:''}
+function bzv(k,v){S.bz[k]=+v||0;if(k=='cap')S.pl.bg=S.bz.cap;if(k=='r')S.pl.rk=S.bz.r;save();renderBiz()}
+function bzf(sg){const a=+$('#fa').value;if(!(a>0))return;S.bz.flows.push({t:Date.now(),a:sg*a,n:$('#fn').value});save();$('#fa').value='';renderBiz()}
+function bzReal(){const n=[];S.coins.forEach(c=>c.e.forEach(x=>{if(x.sold)n.push((x.sold/x.p-1)*100)}));if(n.length<5){alert('You need at least 5 closed trades first (you have '+n.length+'). Use the planner defaults until then.');return}
+const w=n.filter(x=>x>0),l=n.filter(x=>x<=0);S.bz.wr=Math.round(w.length/n.length*100);S.bz.aw=+(w.reduce((a,b)=>a+b,0)/(w.length||1)).toFixed(1)||1;S.bz.al=+(Math.abs(l.reduce((a,b)=>a+b,0))/(l.length||1)).toFixed(1)||1;save();bzSet();renderBiz()}
+function bzSet(){const B=S.bz;$('#bzset').innerHTML=[['cap','Starting capital ($)'],['r','Risk per trade (% of capital)'],['wr','Expected win rate (%)'],['aw','Average win (% per trade)'],['al','Average loss = stop (%)'],['tr','Trades per month'],['ml','Monthly loss limit (%)'],['dd','Pause if drawdown (%)'],['fee','Binance fee per side (%)']].map(([k,t])=>`<label>${t}<input type="number" step="any" value="${B[k]}" oninput="bzv('${k}',this.value)"></label>`).join('')+
+`<label>A service claims win rate (%)<input type="number" value="${B.cw}" oninput="S.bz.cw=+this.value||0;save();renderBiz()"></label><label>...with average win (%)<input type="number" step="any" value="${B.ca}" oninput="S.bz.ca=+this.value||0;save();renderBiz()"></label><label>Deposit / withdraw ($)<input id="fa" type="number"></label><label>Note<input id="fn" placeholder="optional"></label><label>&nbsp;<span><button class="sm" onclick="bzf(1)">+ Deposit</button> <button class="sm" onclick="bzf(-1)">- Withdraw</button></span></label><label>&nbsp;<button class="sm" onclick="bzReal()">Use my real closed-trade numbers</button></label>`}
+function renderBiz(){const B=S.bz;if(!(B.al>0&&B.aw>0&&B.tr>0))return;const base=bzBase(),b=pnl(),eq=base+b.rl+b.ul,r=mc(B,B.wr),lo=mc(B,B.wr-15),hi=mc(B,Math.min(95,B.wr+10)),$$=v=>'$'+Math.round(v).toLocaleString('en'),
+le=B.al+2*B.fee,we=B.aw-2*B.fee,be=we>0?le/(we+le)*100:100,mAge=Math.min(12,(Date.now()-B.start)/(30.4*864e5)),mi=Math.floor(mAge),plan=r.path[mi]*B.cap,mxl=B.ca*B.cw/Math.max(1,100-B.cw),
+sc=(t,m,c)=>`<div>${t}<b style="color:${c}">${$$(m.med*B.cap)}</b><span class="sc">bad luck ${$$(m.p10*B.cap)} | good luck ${$$(m.p90*B.cap)}</span></div>`;
+const rows=[2,3,5,8].map(st=>{const z=Math.min(.25*base,base*B.r/100/(st/100));return`<tr><td>${st}%</td><td><b>${$$(z)}</b> (${(z/base*100).toFixed(0)}%)</td><td>-${$$(z*st/100)}</td><td>${Math.floor(.6*base/z)}</td><td>${$$(z*.7)} / ${$$(z*.5)}</td></tr>`}).join('');
+$('#bzout').innerHTML=`<div class="todo" style="line-height:1.7"><b>Reality check:</b> with your numbers (win ${B.aw}% / lose ${B.al}%, fees included) you must win <b>${be.toFixed(0)}%</b> of trades just to break even. You expect ${B.wr}%. ${B.wr>be?`<span class="g">Edge: +${(B.wr/100*we-(1-B.wr/100)*le).toFixed(2)}% per trade before sizing.</span>`:'<span class="rd">No edge: this plan loses money over time. Change the numbers or do not trade it.</span>'}<br>
+${B.wr>65?'<br><span class="rd">Warning: a win rate above 65% over hundreds of trades is rare. Keep it at 50% until your own closed trades prove more.</span>':''}<br><span class="sc">Starting numbers are modest placeholders, not predictions. Replace them with your real results after 30+ closed trades.</span><br><b>Claim check:</b> a service claiming ${B.cw}% wins with ${B.ca}% average win stays profitable only if its average loss is under <b>${mxl.toFixed(1)}%</b>. High win rates usually come from tiny wins and rare big losses. Ask for the average loss and a live track record before trusting any "90%+" claim.</div>
+<h3 style="margin:14px 0 4px;font-size:15px">12-month projection (500 simulated years, ${B.tr*12} trades each, risk ${B.r}% per trade)</h3>
+<div class="zone" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">${sc('Cautious (win rate -15)',lo,'#ff8a3d')}${sc('Your plan',r,'#0ecb81')}${sc('Optimistic (+10)',hi,'#5aa9ff')}<div>Chance to end below start<b>${(r.loss*100).toFixed(0)}%</b><span class="sc">your plan</span></div><div>Chance of a ${B.dd}%+ drawdown<b>${(r.ddp*100).toFixed(0)}%</b><span class="sc">your plan</span></div></div>
+<div class="sc" style="margin-top:6px">Typical month-end path: ${r.path.slice(1).map((v,i)=>'M'+(i+1)+' '+$$(v*B.cap)).join(' | ')}. A simulation of your own assumptions, not a forecast.</div>
+<h3 style="margin:14px 0 4px;font-size:15px">Account (month ${mi+1} of 12)</h3>
+<div class="zone" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"><div>Capital + deposits<b>${$$(base)}</b></div><div>Realized profit/loss<b class="${b.rl>=0?'up':'dn'}">${b.rl>=0?'+':''}${b.rl.toFixed(2)}$</b></div><div>Open profit/loss<b class="${b.ul>=0?'up':'dn'}">${b.ul>=0?'+':''}${b.ul.toFixed(2)}$</b></div><div>Equity now<b>${$$(eq)}</b></div><div>Typical plan path now<b>${$$(plan+(base-B.cap))}</b><span class="sc">${eq>=plan+(base-B.cap)?'on or ahead of plan':'behind plan'}</span></div></div>
+${B.flows.length?`<div class="sc" style="margin-top:6px">Ledger: ${B.flows.slice(-6).reverse().map(x=>new Date(x.t).toLocaleDateString()+' '+(x.a>0?'+':'')+x.a+'$ '+(x.n||'')).join(' | ')}</div>`:''}
+<h3 style="margin:14px 0 4px;font-size:15px">How much to invest per signal (capital ${$$(base)}, max 25% per coin, max 60% invested)</h3>
+<div style="overflow-x:auto"><table><tr><th>Stop distance</th><th>Invest (strong signal)</th><th>Loss if stopped</th><th>Max open trades</th><th>Medium / weak signal</th></tr>${rows}</table></div>
+<h3 style="margin:14px 0 4px;font-size:15px">Rules that protect the business</h3><div class="todo" style="line-height:1.8">• Never risk more than ${B.r}% (${$$(base*B.r/100)}) on one trade. • Stop buying for the month at -${B.ml}% (${$$(base*B.ml/100)}). • Pause and review at -${B.dd}% drawdown. • Always set the stop before you buy. • Keep 40% cash. • Spot only, no leverage, no borrowed money. • Write down every trade (the app does it for you).</div>
+<h3 style="margin:14px 0 4px;font-size:15px">Launch roadmap</h3><div class="sc" style="line-height:1.7">Month 1: paper-trade the signals and watch the Smart Money live track record, risk only 10% of capital. Months 2-3: if real results match the plan, use half size. Month 4+: scale to full size only while the live win rate and drawdown stay inside the plan. Review every month in My Stats.<br><b>If you want to help other people:</b> share education and clearly labelled analysis, show the real track record (wins and losses), and never promise returns. Managing other people's money or selling paid signals may need a licence or registration in your country, so check local rules first. This tool is analysis, not financial advice.</div>`}
+function renderMov(){const P=S.pl,H=S.mv.h;if(!MV.res.length)return;
+const L=MV.res.filter(r=>r.h[H]).sort((a,b)=>b.h[H].p5-a.h[H].p5).slice(0,10),pc=v=>(v*100).toFixed(0)+'%';
+const card=(r,i)=>{const q=r.h[H],p=r.p,sd=r.sd,sz=Math.min(P.bg*.25,P.bg*P.rk/100/sd)*(q.p5>=.5?1:q.p5>=.3?.7:.5)*(SM.up?1:.5),cf=q.n5>=30?['Good','#0ecb81']:q.n5>=12?['Medium','#fcd535']:['Few','#f6465d'];
+return`<div class="mv"><span class="rk">#${i+1}</span><div class="h"><b>${r.s} / USDT</b></div><div><span class="p" style="font-size:22px">$${f(p)}</span><span class="chg ${r.chg>=0?'up':'dn'}">${r.chg.toFixed(1)}% today</span></div>
+<div class="chance" style="margin-top:8px"><span class="sc">Chance of +5% within ${H}h</span><br><b>${pc(q.p5)}</b> <span class="sc">(${q.n5} similar cases) | +10%: <b style="color:var(--t)">${pc(q.p10)}</b></span><div class="bar"><i style="width:${Math.min(100,q.p5*100)}%"></i></div></div>
+<div class="zone"><div>BUY ZONE<b class="up">$${f(p-.5*r.atr)} - $${f(p)}</b></div><div>STOP-LOSS<b class="dn">$${f(p*(1-sd))} (-${(sd*100).toFixed(1)}%)</b></div><div>SELL ZONE 1 (+5%)<b class="up">$${f(p*1.05)}</b></div><div>SELL ZONE 2 (+10%)<b class="up">$${f(p*1.1)}</b></div></div>
+<div class="sc" style="margin-top:8px;line-height:1.5">Invest <b style="color:var(--t)">$${sz.toFixed(0)}</b> (${(sz/P.bg*100).toFixed(0)}% of fund): stop -$${(sz*sd).toFixed(0)}, +5% = +$${(sz*.05).toFixed(0)}, +10% = +$${(sz*.1).toFixed(0)}. If no target by ${hrs(Date.now()+H*36e5)}, sell. ${r.up?'Uptrend':'Downtrend'}, RSI ${r.rsi.toFixed(0)}${r.vx>1.5?', volume surge':''}. <span style="color:${cf[1]}">${cf[0]} sample size</span></div>
+<div class="row"><button class="sm" onclick="addCoin('${r.s}')">+ Add to my list</button><a href="https://www.binance.com/en/trade/${r.s}_USDT?type=spot" target="_blank" rel="noopener" style="color:var(--y);font-size:13px">Trade on Binance ↗</a></div></div>`};
+$('#mvout').innerHTML=`<div class="tabs">${[1,12,24].map(h=>`<button class="tab ${H==h?'on':''}" onclick="S.mv.h=${h};save();renderMov()">Next ${h} hour${h>1?'s':''}</button>`).join('')}</div><div class="todo"><b>Market:</b> <span class="${SM.up?'g':'rd'}">${SM.up?'Bitcoin trend healthy.':'Bitcoin weak - position sizes halved.'}</span> Top 10 of ${MV.res.length} coins, ranked by chance. Updated ${new Date(MV.t).toLocaleTimeString()}.</div><div class="mvg">${L.map(card).join('')}</div>
+<div class="foot"><b>How the chance is calculated (real, not guessed):</b> for each coin we replay the last ~20 days of hourly candles. We find every earlier moment with the same condition as now (trend, RSI zone, 6h momentum, volume surge) and count how often price reached +5% (or +10%) within ${H}h <i>before</i> hitting the stop (2 x ATR). That hit rate is blended with the coin's own average rate so small samples do not fool us. Buy zone = current price down to 0.5 ATR lower. The list always shows the best 10 even when chances are low, so check the chance % and sample size. These are estimates, not promises.</div>`}
+function renderSmc(){const P=S.pl,now=Date.now();let ch=0;
+S.sm.list.forEach(g=>{const p=LP[g.s+'USDT'];if(g.st!='open'||!p)return;if(p<=g.zh*1.003&&p>g.sl)g.inz=1;
+if(p<=g.sl){g.st=g.inz?'sl':'no';ch=1}else if(p>=g.t1){g.st=g.inz?'t1':'missed';ch=1}else if(now-g.t>72*36e5){g.st='exp';ch=1}});if(ch)save();
+const open=S.sm.list.filter(g=>g.st=='open'),done=S.sm.list.filter(g=>g.st!='open').slice(0,6),cl=S.sm.list.filter(g=>g.st=='t1'||g.st=='sl'),w=cl.filter(g=>g.st=='t1').length,
+today=S.sm.list.filter(g=>new Date(g.t).toDateString()==new Date().toDateString()).length;
+const card=g=>{const p=LP[g.s+'USDT'],sd=(g.e-g.sl)/g.e,size=Math.min(P.bg*.25,P.bg*P.rk/100/sd)*(g.wr>=75?1:g.wr>=65?.8:.6)*(SM.up?1:.5),pc=x=>((x/g.e-1)*100).toFixed(1);let tag,c;
+if(g.st=='open'){const z=p&&p<=g.zh*1.003;tag=z?'🟢 IN BUY ZONE - BUY NOW':'⏳ NOT YET - buy when price falls to $'+f(g.zh);c=z?'buy blink':'nyet'}
+else{tag={t1:'✅ TARGET 1 HIT',sl:'⛔ STOP-LOSS HIT',exp:'⌛ EXPIRED (72h)',missed:'Missed - price rose without entry',no:'Cancelled - stop hit before entry'}[g.st];c='hold'}
+return`<div class="card" style="margin:0"><div class="h"><b>${g.s} / USDT</b><span class="sc">${hrs(g.t)}</span><a href="https://www.binance.com/en/trade/${g.s}_USDT?type=spot" target="_blank" rel="noopener">Trade ↗</a></div>
+<div class="act ${c}"><b style="font-size:16px">${tag}</b><span>Price now $${f(p)}</span></div>
+<div class="grid" style="font-size:13px;line-height:1.6"><span>BUY ZONE<br><b class="up">$${f(g.zl)} - $${f(g.zh)}</b></span><span>STOP-LOSS<br><b class="dn">$${f(g.sl)} (-${(sd*100).toFixed(1)}%)</b></span><span>SELL ZONE 1<br><b class="up">$${f(g.t1)} (+${pc(g.t1)}%)</b></span><span>SELL ZONE 2<br><b class="up">$${f(g.t2)} (+${pc(g.t2)}%)</b></span>
+<span>INVEST<br><b>$${size.toFixed(0)}</b> (${(size/P.bg*100).toFixed(0)}% of fund)</span><span>IF STOP / TARGET<br><span class="dn">-$${(size*sd).toFixed(0)}</span> / <span class="up">+$${(size*(g.t1/g.e-1)).toFixed(0)} to +$${(size*(g.t2/g.e-1)).toFixed(0)}</span></span></div>
+<div class="sc" style="margin-top:6px;line-height:1.5">Time: sell by ${hrs(g.t+72*36e5)} at the latest (usual exit ~${Math.max(1,Math.round(g.mk))}h). Past win rate of this setup on ${g.s}: <b>${g.wr.toFixed(0)}%</b> of ${g.n} trades (avg ${(g.avg*100).toFixed(1)}% per trade). Why: uptrend + bullish structure break + order-block retest in discount${g.fvg?' + fair value gap':''}${g.sw?' + liquidity sweep':''}.</div>
+<div class="row"><button class="sm" onclick="addCoin('${g.s}')">+ Add to my list</button></div></div>`};
+$('#smout').innerHTML=`<div class="todo"><b>Market:</b> <span class="${SM.up?'g':'rd'}">${SM.up?'Bitcoin above its 1h EMA100 - healthy.':'Bitcoin below its 1h EMA100 - weak, position sizes halved.'}</span> Scanned ${SM.scan} coins, ${SM.setups} smart-money setups found. Signals today: ${today}/${S.sm.max}. <b>Live track record (real, forward):</b> ${cl.length?`${w} of ${cl.length} closed signals hit target 1`:'no closed signals yet'}.</div>
+`+(open.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">${open.map(card).join('')}</div>`:`<div class="sc" style="padding:10px">No signal passed the quality filter right now (needs at least 8 past trades, positive average and win rate of ${S.sm.wr}% or more). Waiting is the right decision - no trade is a trade.</div>`)+
+(done.length?`<details><summary>Closed signals (${done.length})</summary><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:8px">${done.map(card).join('')}</div></details>`:'')+
+`<div class="foot">How it works: spot-only, BUY side. The engine finds a Break of Structure upward, marks the Order Block (last down candle before the push), and signals only when price comes back into it inside the discount half, with price above the 1h EMA100. Stop = below the block (0.5 ATR). Sell zone 1 = the impulse high, zone 2 = +50% extension. Invest = fund x risk% / stop distance, max 25% of fund per signal, scaled by past win rate. A signal appears only if the same setup on that coin won at least ${S.sm.wr}% in the last 500 hourly candles (fees 0.2% included). <b>No one can guarantee 70-90%.</b> Raise the minimum win rate to get fewer, stricter signals; the real forward track record above shows the truth. Updated ${SM.t?new Date(SM.t).toLocaleTimeString():'-'}.</div>`}
+$('#iv').value=S.iv;draw();connect();poll();reloadAll();
+fng();setInterval(fng,1800000);$('#ar').value=S.ar;$('#nt').textContent=window.Notification&&Notification.permission=='granted'?'(on)':'';plSet();smSet();renderSmc();renderMov();showPanels();setInterval(tick,1000);setInterval(poll,4000);setInterval(reloadAll,60000);setInterval(stat,1000);
+</script></body></html>
